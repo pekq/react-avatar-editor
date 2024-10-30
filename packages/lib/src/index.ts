@@ -126,6 +126,8 @@ export interface Props {
   disableBoundaryChecks?: boolean
   disableHiDPIScaling?: boolean
   disableCanvasRotation?: boolean
+  horizontalBleed?: number
+  verticalBleed?: number
 }
 
 export interface Position {
@@ -559,19 +561,21 @@ class AvatarEditor extends React.Component<PropsWithDefaults, State> {
     return { x, y, height, width }
   }
 
-  paint(context: CanvasRenderingContext2D) {
+  paint = (context: CanvasRenderingContext2D) => {
     context.save()
     context.scale(this.pixelRatio, this.pixelRatio)
     context.translate(0, 0)
-    context.fillStyle = 'rgba(' + this.props.color.slice(0, 4).join(',') + ')'
-
-    let borderRadius = this.props.borderRadius
+    
     const dimensions = this.getDimensions()
     const [borderSizeX, borderSizeY] = this.getBorders(dimensions.border)
     const height = dimensions.canvas.height
     const width = dimensions.canvas.width
-
-    // clamp border radius between zero (perfect rectangle) and half the size without borders (perfect circle or "pill")
+    
+    // Draw the main mask
+    context.fillStyle = 'rgba(' + this.props.color.slice(0, 4).join(',') + ')'
+    let borderRadius = this.props.borderRadius
+    
+    // clamp border radius between zero (perfect rectangle) and half the size without borders
     borderRadius = Math.max(borderRadius, 0)
     borderRadius = Math.min(
       borderRadius,
@@ -591,6 +595,55 @@ class AvatarEditor extends React.Component<PropsWithDefaults, State> {
     )
     context.rect(width, 0, -width, height) // outer rect, drawn "counterclockwise"
     context.fill('evenodd')
+
+    // Draw bleed areas if specified
+    if (this.props.horizontalBleed || this.props.verticalBleed) {
+      const bleedColor = 'rgba(255, 0, 0, 0.2)' // Semi-transparent red
+      context.fillStyle = bleedColor
+      
+      const innerWidth = width - borderSizeX * 2
+      const innerHeight = height - borderSizeY * 2
+      
+      if (this.props.horizontalBleed) {
+        const bleedWidth = innerWidth * this.props.horizontalBleed
+        
+        // Left bleed
+        context.fillRect(
+          borderSizeX,
+          borderSizeY,
+          bleedWidth,
+          innerHeight
+        )
+        
+        // Right bleed
+        context.fillRect(
+          width - borderSizeX - bleedWidth,
+          borderSizeY,
+          bleedWidth,
+          innerHeight
+        )
+      }
+      
+      if (this.props.verticalBleed) {
+        const bleedHeight = innerHeight * this.props.verticalBleed
+        
+        // Top bleed
+        context.fillRect(
+          borderSizeX,
+          borderSizeY,
+          innerWidth,
+          bleedHeight
+        )
+        
+        // Bottom bleed
+        context.fillRect(
+          borderSizeX,
+          height - borderSizeY - bleedHeight,
+          innerWidth,
+          bleedHeight
+        )
+      }
+    }
 
     if (this.props.showGrid) {
       drawGrid(

@@ -31,6 +31,8 @@ type State = {
   isTransparent: boolean
   backgroundColor?: string
   showGrid: boolean
+  horizontalBleed: number
+  verticalBleed: number
 }
 
 const App = () => {
@@ -49,6 +51,8 @@ const App = () => {
     isTransparent: false,
     backgroundColor: undefined,
     showGrid: false,
+    horizontalBleed: 0,
+    verticalBleed: 0,
   })
 
   const handleNewImage = (e: ChangeEvent<HTMLInputElement>) => {
@@ -153,6 +157,14 @@ const App = () => {
   const handleShowGrid = (e: ChangeEvent<HTMLInputElement>) =>
     setState({ ...state, showGrid: e.target.checked })
 
+  const handleHorizontalBleed = (e: ChangeEvent<HTMLInputElement>) => {
+    setState({ ...state, horizontalBleed: parseFloat(e.target.value) })
+  }
+
+  const handleVerticalBleed = (e: ChangeEvent<HTMLInputElement>) => {
+    setState({ ...state, verticalBleed: parseFloat(e.target.value) })
+  }
+
   return (
     <div>
       <Dropzone
@@ -178,6 +190,8 @@ const App = () => {
               onImageReady={logCallback.bind(this, 'onImageReady')}
               image={state.image}
               disableCanvasRotation={state.disableCanvasRotation}
+              horizontalBleed={state.horizontalBleed}
+              verticalBleed={state.verticalBleed}
             />
             <input
               name="newImage"
@@ -291,6 +305,30 @@ const App = () => {
           <br />
         </div>
       )}
+      <br />
+      Horizontal Bleed:
+      <input
+        name="horizontalBleed"
+        type="range"
+        onChange={handleHorizontalBleed}
+        min="0"
+        max="1"
+        step="0.01"
+        value={state.horizontalBleed}
+      />
+      <span>{(state.horizontalBleed * 100).toFixed(0)}%</span>
+      <br />
+      Vertical Bleed:
+      <input
+        name="verticalBleed"
+        type="range"
+        onChange={handleVerticalBleed}
+        min="0"
+        max="1"
+        step="0.01"
+        value={state.verticalBleed}
+      />
+      <span>{(state.verticalBleed * 100).toFixed(0)}%</span>
       <br />
       <input type="button" onClick={handleSave} value="Preview" />
       <br />
